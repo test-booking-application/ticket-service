@@ -156,18 +156,22 @@ spec:
 
         stage('Push to ECR') {
             steps {
-                container('aws') {
+                container('docker') {
                     withCredentials([usernamePassword(credentialsId: 'aws-ecr-creds', passwordVariable: 'ECR_PASSWORD', usernameVariable: 'ECR_USERNAME')]) {
                         script {
+                            // Install AWS CLI in docker container
+                            sh '''
+                                apk add --no-cache python3 py3-pip
+                                pip3 install --break-system-packages awscli
+                            '''
+                            
                             // Login to ECR
                             sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                            
+                            // Push images
+                            sh "docker push ${IMAGE_URI}:${DOCKER_TAG}"
+                            sh "docker push ${IMAGE_URI}:latest"
                         }
-                    }
-                }
-                container('docker') {
-                    script {
-                        sh "docker push ${IMAGE_URI}:${DOCKER_TAG}"
-                        sh "docker push ${IMAGE_URI}:latest"
                     }
                 }
             }
