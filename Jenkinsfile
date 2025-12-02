@@ -177,22 +177,6 @@ spec:
             }
         }
 
-        stage('Deploy to EKS') {
-            steps {
-                container('helm') {
-                    script {
-                        // Deploy using Helm
-                        // Assumes a 'charts/' directory exists in the repo
-                        sh """
-                            helm upgrade --install ${APP_NAME} ./charts/${APP_NAME} \
-                            --namespace dev --create-namespace \
-                            --set image.repository=${IMAGE_URI} \
-                            --set image.tag=${DOCKER_TAG}
-                        """
-                    }
-                }
-            }
-        }
     }
 
     post {
@@ -202,10 +186,23 @@ spec:
             // junit 'test-results.xml' 
         }
         success {
-            echo "✅ Pipeline succeeded! Deployed ${APP_NAME}:${DOCKER_TAG}"
+            echo "✅ CI Pipeline succeeded! Built and pushed ${APP_NAME}:${DOCKER_TAG}"
+            
+            // Trigger CD pipeline only for main branch
+            script {
+                if (env.BRANCH_NAME == 'main') {
+                    echo "🚀 Triggering CD pipeline for main branch..."
+                    build job: "${env.JOB_NAME}-cd", 
+                          parameters: [
+                              string(name: 'IMAGE_TAG', value: "${DOCKER_TAG}"),
+                              string(name: 'NAMESPACE', value: 'dev')
+                          ],
+                          wait: false
+                }
+            }
         }
         failure {
-            echo "❌ Pipeline failed."
+            echo "❌ CI Pipeline failed."
         }
     }
 }
