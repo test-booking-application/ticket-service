@@ -140,11 +140,15 @@ spec:
                             chmod +x /usr/local/bin/trivy
                         '''
                         
-                        // Scan the local Docker image (no need to pull from ECR)
-                        sh "trivy image --severity CRITICAL --exit-code 1 --no-progress ${IMAGE_URI}:${DOCKER_TAG}"
+                        // Export Docker image to tarball to avoid Docker API version issues
+                        sh "docker save ${IMAGE_URI}:${DOCKER_TAG} -o /tmp/image.tar"
                         
-                        // Generate full report (won't fail build)
-                        sh "trivy image --severity HIGH,CRITICAL --no-progress ${IMAGE_URI}:${DOCKER_TAG} > trivy-report.txt"
+                        // Scan the tarball
+                        sh "trivy image --input /tmp/image.tar --severity CRITICAL --exit-code 1 --no-progress"
+                        sh "trivy image --input /tmp/image.tar --severity HIGH,CRITICAL --no-progress > trivy-report.txt"
+                        
+                        // Clean up
+                        sh "rm /tmp/image.tar"
                     }
                 }
             }
