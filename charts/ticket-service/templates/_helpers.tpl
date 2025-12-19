@@ -25,6 +25,8 @@ Create a default fully qualified app name.
 Common labels
 */}}
 {{- define "ticket-service.labels" -}}
+app: {{ include "ticket-service.name" . }}
+version: {{ .Chart.AppVersion | default "v1" | quote }}
 helm.sh/chart: {{ include "ticket-service.chart" . }}
 {{ include "ticket-service.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
