@@ -1,5 +1,5 @@
 image:
-  repository: 044302809167.dkr.ecr.us-east-1.amazonaws.com/ticket-booking/ticket-service
+  repository: 173235558072.dkr.ecr.us-east-1.amazonaws.com/ticket-booking/ticket-service
   pullPolicy: IfNotPresent
   tag: 10-0d8fc10f81ecb37294104b3677083cce837bb883
 
